@@ -30,3 +30,9 @@ obj-$(CONFIG_INPUT_KEYRESET)	+= keyreset.o
 obj-$(CONFIG_INPUT_KEYCOMBO)	+= keycombo.o
 
 obj-$(CONFIG_RMI4_CORE)		+= rmi4/
+
+#ifdef VENDOR_EDIT
+#Long.Liu@BSP.Fingerprint.Basic,2018/11/15,Add for Fingerprint Driver
+obj-$(CONFIG_OPPO_FINGERPRINT)  += oppo_fp_drivers/
+obj-$(CONFIG_OPPO_FINGERPRINT)  += misc/oppo_seccommon_drivers/
+#endif /*VENDOR_EDIT*/
