@@ -31,8 +31,6 @@
 #include <sec_boot_lib.h>
 #elif CONFIG_OPPO_BSP_SECCOM_PLATFORM == 855 || CONFIG_OPPO_BSP_SECCOM_PLATFORM == 6125 || CONFIG_OPPO_BSP_SECCOM_PLATFORM == 7150
 #include <linux/soc/qcom/smem.h>
-#else
-#include <linux/soc/qcom/smem.h>
 #endif
 
 #include <linux/slab.h>
