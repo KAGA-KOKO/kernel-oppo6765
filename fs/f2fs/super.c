@@ -1942,7 +1942,7 @@ static unsigned f2fs_max_namelen(struct inode *inode)
 }
 
 static const struct fscrypt_operations f2fs_cryptops = {
-	.key_prefix	= "f2fs:",
+	.key_prefix	= "f2fs,
 	.get_context	= f2fs_get_context,
 	.set_context	= f2fs_set_context,
 	.dummy_context	= f2fs_dummy_context,
