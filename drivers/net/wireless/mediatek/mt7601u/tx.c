@@ -93,6 +93,10 @@ mt7601u_tx_pktid_dec(struct mt7601u_dev *dev, struct mt76_tx_status *stat)
 	}
 
 	stat->retry = req_rate - eff_rate;
+    if (stat->retry > 100) {
+        dev_warn(dev->dev, "TX retry count abnormal: %u, resetting to 0\n", stat->retry);
+        stat->retry = 0;
+    }
 }
 
 static void mt7601u_tx_skb_remove_dma_overhead(struct sk_buff *skb,
