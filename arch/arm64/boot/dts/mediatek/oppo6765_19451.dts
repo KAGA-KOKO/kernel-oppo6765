@@ -1076,5 +1076,23 @@
 };
 //#endif  /*VENDOR_EDIT*/
 
+
+&platform {
+    msdc0: msdc@11230000 {
+        compatible = "mediatek,mt6765-msdc", "mediatek,msdc0";
+        reg = <0x11230000 0x1000>;
+        interrupts = <GIC_SPI 84 IRQ_TYPE_LEVEL_LOW>;
+
+        clocks = <&infracfg CLK_IFR_MSDC0>,
+                 <&topckgen CLK_TOP_MSDC50_0_HCLK_SEL>;
+        clock-names = "source", "hclk";
+
+        cd-gpios = <&pio 0 GPIO_ACTIVE_LOW>; // Ganti jika tahu GPIO yang tepat
+        vmmc-supply = <&ext_buck_lp4>;
+        vqmmc-supply = <&ext_buck_lp4x>;
+        status = "okay";
+    };
+};
+
 #include <oppo6765_19451/cust.dtsi>
 /*End of this file, DO NOT ADD ANYTHING HERE*/
