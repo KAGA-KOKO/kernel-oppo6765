@@ -1087,7 +1087,7 @@
                  <&topckgen CLK_TOP_MSDC50_0_HCLK_SEL>;
         clock-names = "source", "hclk";
 
-        cd-gpios = <&pio 0 GPIO_ACTIVE_LOW>; // Ganti jika tahu GPIO yang tepat
+        cd-gpios = <&pio 333 GPIO_ACTIVE_LOW>; // Ganti jika tahu GPIO yang tepat
         vmmc-supply = <&ext_buck_lp4>;
         vqmmc-supply = <&ext_buck_lp4x>;
         status = "okay";
