@@ -1083,8 +1083,8 @@
         reg = <0x11230000 0x1000>;
         interrupts = <GIC_SPI 84 IRQ_TYPE_LEVEL_LOW>;
 
-        clocks = <&infracfg CLK_IFR_MSDC0>,
-                 <&topckgen CLK_TOP_MSDC50_0_HCLK_SEL>;
+        clocks = <&topckgen CLK_TOP_MSDC50_0_SEL>,
+         <&infracfg CLK_INFRA_MSDC0>;
         clock-names = "source", "hclk";
 
         cd-gpios = <&pio 333 GPIO_ACTIVE_LOW>; // Ganti jika tahu GPIO yang tepat
