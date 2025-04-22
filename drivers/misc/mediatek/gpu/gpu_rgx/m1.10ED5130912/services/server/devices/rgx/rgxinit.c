@@ -1329,6 +1329,15 @@ PVRSRV_ERROR PVRSRVRGXInitDevPart2KM (PVRSRV_DEVICE_NODE	*psDeviceNode,
 
 	psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer =
 			OSAddTimer((PFN_TIMER_FUNC)PDVFSRequestReactiveUpdate,
+
+#if defined(SUPPORT_PDVFS) && !defined(RGXFW_META_SUPPORT_2ND_THREAD)
+psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer =
+        OSAddTimer((PFN_TIMER_FUNC)PDVFSRequestReactiveUpdate,
+                psDevInfo,
+                PDVFS_REACTIVE_INTERVAL_MS);
+
+OSEnableTimer(psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer);
+#endif
 					psDevInfo,
 					PDVFS_REACTIVE_INTERVAL_MS);
 
@@ -3498,6 +3507,14 @@ PVRSRV_ERROR DevDeInitRGX (PVRSRV_DEVICE_NODE *psDeviceNode)
 #endif
 
 	if (psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer)
+
+#if defined(SUPPORT_PDVFS) && !defined(RGXFW_META_SUPPORT_2ND_THREAD)
+if (psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer)
+{
+    OSDisableTimer(psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer);
+    OSRemoveTimer(psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer);
+}
+#endif
 	{
 		OSDisableTimer(psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer);
 		OSRemoveTimer(psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer);
