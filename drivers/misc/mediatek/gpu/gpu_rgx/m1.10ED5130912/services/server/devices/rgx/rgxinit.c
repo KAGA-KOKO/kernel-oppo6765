@@ -125,7 +125,7 @@ static ktime_t gpu_on_time;
 static u64 gpu_active_ns;
 static struct kobject *gpu_kobj;
 
-static ssize_t gpu_load_show_sysfs(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
+static ssize_t gpu_load_sysfs_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
 {
     u64 now = ktime_to_ns(ktime_get());
     u64 active = gpu_active_ns;
@@ -134,7 +134,7 @@ static ssize_t gpu_load_show_sysfs(struct kobject *kobj, struct kobj_attribute *
     return sprintf(buf, "%llu\n", load);
 }
 
-static struct kobj_attribute gpu_load_attr = __ATTR_RO(gpu_load);
+static struct kobj_attribute gpu_load_attr = __ATTR_RO(gpu_load_sysfs);
 
 static int gpu_load_show_proc(struct seq_file *m, void *v)
 {
@@ -4126,7 +4126,7 @@ PVRSRV_ERROR RGXRegisterDevice (PVRSRV_DEVICE_NODE *psDeviceNode)
 		PVR_DPF((PVR_DBG_ERROR, "%s: Failed to create dummy page lock", __func__));
 
 	gpu_on_time = ktime_get();
-	gpu_active_ns += ktime_to_ns(ktime_get() - gpu_on_time);
+	gpu_active_ns += ktime_to_ns(ktime_sub(ktime_get(), gpu_on_time));
 	gpu_kobj = kobject_create_and_add("gpu_stats", kernel_kobj);
 	if (gpu_kobj)
 		sysfs_create_file(gpu_kobj, &gpu_load_attr.attr);
