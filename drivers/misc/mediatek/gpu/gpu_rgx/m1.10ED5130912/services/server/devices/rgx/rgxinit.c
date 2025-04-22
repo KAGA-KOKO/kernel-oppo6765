@@ -113,6 +113,51 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #if defined(SUPPORT_PDVFS)
 #include "rgxpdvfs.h"
+
+#include <linux/timekeeping.h>
+#include <linux/proc_fs.h>
+#include <linux/seq_file.h>
+#include <linux/kobject.h>
+#include <linux/sysfs.h>
+
+static ktime_t gpu_on_time;
+static u64 gpu_active_ns;
+static struct kobject *gpu_kobj;
+
+static int gpu_load_show_proc(struct seq_file *m, void *v)
+{
+    u64 now = ktime_to_ns(ktime_get());
+    u64 active = gpu_active_ns;
+    u64 total = now;
+    u64 load = total ? (active * 100 / total) : 0;
+    seq_printf(m, "GPU Load: %llu%%\n", load);
+    return 0;
+}
+
+static int gpu_load_open_proc(struct inode *inode, struct file *file)
+{
+    return single_open(file, gpu_load_show_proc, NULL);
+}
+
+static const struct file_operations gpu_load_fops = {
+    .owner = THIS_MODULE,
+    .open = gpu_load_open_proc,
+    .read = seq_read,
+    .llseek = seq_lseek,
+    .release = single_release,
+};
+
+static ssize_t gpu_load_show_sysfs(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
+{
+    u64 now = ktime_to_ns(ktime_get());
+    u64 active = gpu_active_ns;
+    u64 total = now;
+    u64 load = total ? (active * 100 / total) : 0;
+    return sprintf(buf, "%llu\n", load);
+}
+
+static struct kobj_attribute gpu_load_attr = __ATTR_RO(gpu_load);
+
 #endif
 
 static PVRSRV_ERROR RGXDevInitCompatCheck(PVRSRV_DEVICE_NODE *psDeviceNode);
@@ -4082,6 +4127,16 @@ PVRSRV_ERROR RGXRegisterDevice (PVRSRV_DEVICE_NODE *psDeviceNode)
 	if (PVRSRV_OK != eError)
 	{
 		PVR_DPF((PVR_DBG_ERROR, "%s: Failed to create dummy page lock", __func__));
+
+	/* GPU Load Tracking Injection */
+	gpu_on_time = ktime_get();
+	gpu_active_ns += ktime_to_ns(ktime_get() - gpu_on_time);
+
+	gpu_kobj = kobject_create_and_add("gpu_stats", kernel_kobj);
+	if (gpu_kobj)
+		sysfs_create_file(gpu_kobj, &gpu_load_attr.attr);
+
+	proc_create("gpu_load", 0444, NULL, &gpu_load_fops);
 		return eError;
 	}
 #if defined(PDUMP)
