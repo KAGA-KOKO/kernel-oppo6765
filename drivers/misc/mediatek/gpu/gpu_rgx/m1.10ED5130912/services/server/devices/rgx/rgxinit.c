@@ -736,10 +736,11 @@ static void RGX_MISRHandler_Main (void *pvData)
 	/* Inform other services devices that we have finished an operation */
 	PVRSRVCheckStatus(psDeviceNode);
 
+ #if defined(SUPPORT_PDVFS) && defined(RGXFW_META_SUPPORT_2ND_THREAD)
 	/* Normally, firmware CCB only exists for the primary FW thread unless PDVFS
 	   is running on the second[ary] FW thread, here we process said CCB */
 	RGXPDVFSCheckCoreClkRateChange(psDeviceNode->pvDevice);
-
+ #endif
 	/* Process the Firmware CCB for pending commands */
 	RGXCheckFirmwareCCB(psDeviceNode->pvDevice);
 
@@ -1326,14 +1327,16 @@ PVRSRV_ERROR PVRSRVRGXInitDevPart2KM (PVRSRV_DEVICE_NODE	*psDeviceNode,
 		return eError;
 	}
 #endif
-
+	
+#if defined(SUPPORT_PDVFS) && !defined(RGXFW_META_SUPPORT_2ND_THREAD)
 	psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer =
 			OSAddTimer((PFN_TIMER_FUNC)PDVFSRequestReactiveUpdate,
 					psDevInfo,
 					PDVFS_REACTIVE_INTERVAL_MS);
 
 	OSEnableTimer(psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer);
-
+#endif
+	
 #if defined(PDUMP)
 	if(!(RGX_IS_FEATURE_SUPPORTED(psDevInfo, S7_CACHE_HIERARCHY)))
 	{
@@ -3496,7 +3499,7 @@ PVRSRV_ERROR DevDeInitRGX (PVRSRV_DEVICE_NODE *psDeviceNode)
 		PDUMPCOMMENT("Error dummy page handle is still active");
 	}
 #endif
-
+#if defined(SUPPORT_PDVFS) && !defined(RGXFW_META_SUPPORT_2ND_THREAD)
 	if (psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer)
 	{
 		OSDisableTimer(psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer);
@@ -3505,7 +3508,7 @@ PVRSRV_ERROR DevDeInitRGX (PVRSRV_DEVICE_NODE *psDeviceNode)
 
 	/*The lock type need to be dispatch type here because it can be acquired from MISR (Z-buffer) path */
 	OSLockDestroy(psDeviceNode->sDummyPage.psDummyPgLock);
-
+#endif
 #if defined(SUPPORT_POWER_SAMPLING_VIA_DEBUGFS)
 	OSLockDestroy(psDevInfo->hCounterDumpingLock);
 #endif
