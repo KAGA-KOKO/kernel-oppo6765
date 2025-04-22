@@ -111,8 +111,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "rgxworkest.h"
 #endif
 
-#if defined(SUPPORT_PDVFS)
-#include "rgxpdvfs.h"
+#if defined(SUPPORT_PDVFS) 
+#include "rgxpdvfs.h" 
+#endif
 
 #include <linux/timekeeping.h>
 #include <linux/proc_fs.h>
@@ -123,6 +124,17 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 static ktime_t gpu_on_time;
 static u64 gpu_active_ns;
 static struct kobject *gpu_kobj;
+
+static ssize_t gpu_load_show_sysfs(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
+{
+    u64 now = ktime_to_ns(ktime_get());
+    u64 active = gpu_active_ns;
+    u64 total = now;
+    u64 load = total ? (active * 100 / total) : 0;
+    return sprintf(buf, "%llu\n", load);
+}
+
+static struct kobj_attribute gpu_load_attr = __ATTR_RO(gpu_load);
 
 static int gpu_load_show_proc(struct seq_file *m, void *v)
 {
@@ -147,18 +159,6 @@ static const struct file_operations gpu_load_fops = {
     .release = single_release,
 };
 
-static ssize_t gpu_load_show_sysfs(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
-{
-    u64 now = ktime_to_ns(ktime_get());
-    u64 active = gpu_active_ns;
-    u64 total = now;
-    u64 load = total ? (active * 100 / total) : 0;
-    return sprintf(buf, "%llu\n", load);
-}
-
-static struct kobj_attribute gpu_load_attr = __ATTR_RO(gpu_load);
-
-#endif
 
 static PVRSRV_ERROR RGXDevInitCompatCheck(PVRSRV_DEVICE_NODE *psDeviceNode);
 static PVRSRV_ERROR RGXDevVersionString(PVRSRV_DEVICE_NODE *psDeviceNode, IMG_CHAR **ppszVersionString);
@@ -736,11 +736,9 @@ static void RGX_MISRHandler_Main (void *pvData)
 	/* Inform other services devices that we have finished an operation */
 	PVRSRVCheckStatus(psDeviceNode);
 
-#if defined(SUPPORT_PDVFS) && defined(RGXFW_META_SUPPORT_2ND_THREAD)
 	/* Normally, firmware CCB only exists for the primary FW thread unless PDVFS
 	   is running on the second[ary] FW thread, here we process said CCB */
 	RGXPDVFSCheckCoreClkRateChange(psDeviceNode->pvDevice);
-#endif
 
 	/* Process the Firmware CCB for pending commands */
 	RGXCheckFirmwareCCB(psDeviceNode->pvDevice);
@@ -1329,14 +1327,12 @@ PVRSRV_ERROR PVRSRVRGXInitDevPart2KM (PVRSRV_DEVICE_NODE	*psDeviceNode,
 	}
 #endif
 
-#if defined(SUPPORT_PDVFS) && !defined(RGXFW_META_SUPPORT_2ND_THREAD)
 	psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer =
 			OSAddTimer((PFN_TIMER_FUNC)PDVFSRequestReactiveUpdate,
 					psDevInfo,
 					PDVFS_REACTIVE_INTERVAL_MS);
 
 	OSEnableTimer(psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer);
-#endif
 
 #if defined(PDUMP)
 	if(!(RGX_IS_FEATURE_SUPPORTED(psDevInfo, S7_CACHE_HIERARCHY)))
@@ -3501,13 +3497,11 @@ PVRSRV_ERROR DevDeInitRGX (PVRSRV_DEVICE_NODE *psDeviceNode)
 	}
 #endif
 
-#if defined(SUPPORT_PDVFS) && !defined(RGXFW_META_SUPPORT_2ND_THREAD)
 	if (psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer)
 	{
 		OSDisableTimer(psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer);
 		OSRemoveTimer(psDeviceNode->psDevConfig->sDVFS.sPDVFSData.hReactiveTimer);
 	}
-#endif
 
 	/*The lock type need to be dispatch type here because it can be acquired from MISR (Z-buffer) path */
 	OSLockDestroy(psDeviceNode->sDummyPage.psDummyPgLock);
@@ -4128,14 +4122,11 @@ PVRSRV_ERROR RGXRegisterDevice (PVRSRV_DEVICE_NODE *psDeviceNode)
 	{
 		PVR_DPF((PVR_DBG_ERROR, "%s: Failed to create dummy page lock", __func__));
 
-	/* GPU Load Tracking Injection */
 	gpu_on_time = ktime_get();
 	gpu_active_ns += ktime_to_ns(ktime_get() - gpu_on_time);
-
 	gpu_kobj = kobject_create_and_add("gpu_stats", kernel_kobj);
 	if (gpu_kobj)
 		sysfs_create_file(gpu_kobj, &gpu_load_attr.attr);
-
 	proc_create("gpu_load", 0444, NULL, &gpu_load_fops);
 		return eError;
 	}
