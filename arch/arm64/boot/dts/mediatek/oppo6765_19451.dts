@@ -1,3 +1,12 @@
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/pinctrl/mt6765-pinfunc.h>
+#include <dt-bindings/clock/mt6765-clk.h>
+
+{
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/pinctrl/mt6765-pinfunc.h>
@@ -1085,6 +1094,11 @@
 
 
 
+
+
+#include <oppo6765_19451/cust.dtsi>
+/*End of this file, DO NOT ADD ANYTHING HERE*/
+
 msdc0: msdc@11230000 {
     compatible = "mediatek,mt6765-msdc", "mediatek,msdc0";
     reg = <0x11230000 0x1000>;
@@ -1100,4 +1114,4 @@ msdc0: msdc@11230000 {
 };
 
 #include <oppo6765_19451/cust.dtsi>
-/*End of this file, DO NOT ADD ANYTHING HERE*/
+};
