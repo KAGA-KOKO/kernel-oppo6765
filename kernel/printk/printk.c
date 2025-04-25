@@ -2390,21 +2390,6 @@ EXPORT_SYMBOL_GPL(vprintk_default);
     }
     // =============================
 
-
-    // ====== FILTER SPAM LOG ======
-    const char *filter_list[] = {
-        "[Power/PPM]",
-        "[wlan]",
-        "kalPerMonHandler",
-        NULL
-    };
-    for (int i = 0; filter_list[i]; i++) {
-        if (strstr(textbuf, filter_list[i])) {
-            return 0; // skip log
-        }
-    }
-    // =============================
-
  */
 asmlinkage __visible int printk(const char *fmt, ...)
 {
