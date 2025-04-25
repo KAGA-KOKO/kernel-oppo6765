@@ -271,8 +271,7 @@ realtime_coarse:
 	seqcnt_acquire
 	ldp	x10, x11, [vdso_data, #VDSO_XTIME_CRS_SEC]
 	seqcnt_check fail=realtime_coarse
-	clock_gettime_return
-
+clock_gettime_return 0
 	ALIGN
 monotonic_coarse:
 	seqcnt_acquire
@@ -283,8 +282,7 @@ monotonic_coarse:
 	/* Computations are done in (non-shifted) nsecs. */
 	get_nsec_per_sec res=x9
 	add_ts sec=x10, nsec=x11, ts_sec=x13, ts_nsec=x14, nsec_to_sec=x9
-	clock_gettime_return
-
+clock_gettime_return 0
 	ALIGN
 syscall: /* Syscall fallback. */
 	mov	x8, #__NR_clock_gettime
